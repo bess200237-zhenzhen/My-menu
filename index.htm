@@ -1074,3 +1074,82 @@ function switchTab(id) {
 </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>清輕妍美學 SPA</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Noto+Serif+TC:wght@300;400;500;600&family=Cinzel:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f5efe6;
+    --warm-white: #faf6f0;
+    --gold: #b8922a;
+    --gold-light: #d4a84b;
+    --gold-pale: #e8d5a3;
+    --brown-deep: #5c3d1e;
+    --brown-mid: #8b5e2e;
+    --brown-light: #c4956a;
+    --text-dark: #3a2a1a;
+    --text-mid: #6b4e31;
+    --text-light: #9b7a54;
+    --divider: rgba(184, 146, 42, 0.25);
+    --shadow: rgba(90, 50, 20, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background-color: var(--cream);
+    font-family: 'Noto Serif TC', serif;
+    color: var(--text-dark);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Decorative background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse at 10% 20%, rgba(212, 168, 75, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 80%, rgba(196, 149, 106, 0.1) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(245, 239, 230, 0) 0%, rgba(232, 213, 163, 0.05) 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 0 60px;
+  }
+
+  /* ── HERO HEADER ── */
+  .hero {
+    text-align: center;
+    padding: 52px 32px 36px;
+    position: relative;
+  }
+
+  .lotus-icon {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 18px;
+    opacity: 0.85;
+    animation: floatUp 0.8s ease both;
+  }
+
+  .hero-title {
+    font-family: 'Noto Serif TC', serif;
+    font-size: clamp(2rem, 8vw, 2.8rem);
+    font-weight: 500;
+    color: var(--brown-deep);
+    letter-spacing: 0.18em;
+    line-height: 1.15;
+    animation: floatUp 0.8s 0.1s ease both;
+  }
