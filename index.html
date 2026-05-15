@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>清輕妍美學 SPA | 線上預約</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #FDF8F3; }
+        .font-serif { font-family: 'Noto Serif TC', serif; }
+        .primary-color { color: #B4975A; }
+        .bg-primary { background-color: #B4975A; }
+        .border-primary { border-color: #B4975A; }
+    </style>
+</head>
+<body class="text-stone-800 pb-10">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-stone-200 py-6 px-4 text-center sticky top-0 z-50 shadow-sm">
+        <h1 class="text-2xl font-serif tracking-widest primary-color">清輕妍美學 SPA</h1>
+        <p class="text-[10px] text-stone-400 mt-1 uppercase tracking-[0.2em]">Relax · Renew · Rejuvenate</p>
+    </header>
+
+    <div id="app" class="max-w-md mx-auto mt-6 px-4">
+        <!-- 步驟指示器 -->
+        <div class="flex justify-between mb-8 px-2" id="progress-bar">
+            <div class="flex flex-col items-center flex-1 step-node" data-step="1">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm mb-1 bg-primary text-white">1</div>
+                <span class="text-[10px] text-stone-400">選項目</span>
+            </div>
+            <div class="flex flex-col items-center flex-1 step-node" data-step="2">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm mb-1 bg-stone-200 text-stone-500">2</div>
+                <span class="text-[10px] text-stone-400">挑時間</span>
+            </div>
+            <div class="flex flex-col items-center flex-1 step-node" data-step="3">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm mb-1 bg-stone-200 text-stone-500">3</div>
+                <span class="text-[10px] text-stone-400">留資料</span>
+            </div>
+        </div>
+
+        <!-- 步驟 1: 服務項目 -->
+        <div id="step-1" class="step-content">
+            <h2 class="text-lg font-medium mb-4 flex items-center gap-2">
+                <span class="primary-color">✦</span> 選擇服務項目
+            </h2>
+            <div id="service-list" class="space-y-6">
+                <!-- 由 JavaScript 注入內容 -->
+            </div>
+        </div>
+
+        <!-- 步驟 2: 日期與時間 -->
+        <div id="step-2" class="step-content hidden">
+            <button onclick="changeStep(1)" class="text-xs text-stone-400 mb-4 hover:text-[#B4975A]">← 返回重新選擇項目</button>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 mb-6">
+                <h2 class="text-lg font-medium mb-4">選擇預約日期</h2>
+                <input type="date" id="date-input" class="w-full p-3 border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#B4975A]" min="">
+            </div>
+            <div id="time-container" class="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-medium">選擇時段</h2>
+                    <span class="text-[10px] text-stone-400">含 30min 清消緩衝</span>
+                </div>
+                <div id="time-slots" class="grid grid-cols-3 gap-2">
+                    <!-- 由 JavaScript 注入時段 -->
+                </div>
+                <div id="duration-info" class="mt-6 p-3 bg-[#FDF8F3] rounded-lg border border-[#B4975A]/20 hidden">
+                    <div class="text-[10px] text-stone-500">預計安排</div>
+                    <div class="text-xs font-medium" id="duration-text"></div>
+                </div>
+            </div>
+            <div class="fixed bottom-6 left-0 right-0 px-4 max-w-md mx-auto hidden" id="next-to-step3">
+                <button onclick="changeStep(3)" class="w-full bg-primary text-white py-4 rounded-full font-medium shadow-lg">下一步：填寫聯絡資料</button>
+            </div>
+        </div>
+
+        <!-- 步驟 3: 聯絡資料 -->
+        <div id="step-3" class="step-content hidden">
+            <button onclick="changeStep(2)" class="text-xs text-stone-400 mb-4 hover:text-[#B4975A]">← 返回調整時間</button>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-100">
+                <h2 class="text-lg font-medium mb-6">確認預約資訊</h2>
+                <div class="space-y-3 mb-8 text-sm">
+                    <div class="flex justify-between border-b border-stone-50 pb-2">
+                        <span class="text-stone-400">預約項目</span>
+                        <span class="font-medium" id="summary-service"></span>
+                    </div>
+                    <div class="flex justify-between border-b border-stone-50 pb-2">
+                        <span class="text-stone-400">日期時間</span>
+                        <span class="font-medium primary-color" id="summary-datetime"></span>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <input type="text" id="user-name" placeholder="顧客姓名" class="w-full p-4 bg-stone-50 rounded-xl border border-transparent focus:bg-white focus:border-primary outline-none">
+                    <input type="tel" id="user-phone" placeholder="聯絡電話" class="w-full p-4 bg-stone-50 rounded-xl border border-transparent focus:bg-white focus:border-primary outline-none">
+                </div>
+                <button onclick="confirmBooking()" class="w-full bg-primary text-white py-4 rounded-xl font-medium shadow-md mt-8">立即送出預約</button>
+                <p class="text-[10px] text-center text-stone-400 mt-4 italic">點擊後將連動至 LINE 進行最後確認</p>
+            </div>
+        </div>
+
+        <!-- 步驟 4: 完成 -->
+        <div id="step-4" class="step-content hidden text-center py-10">
+            <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">✓</div>
+            <h2 class="text-xl font-bold mb-2">預約資料已準備就緒！</h2>
+            <p class="text-stone-500 text-sm mb-10 px-6">請點擊下方按鈕傳送訊息至我們的官方 LINE，專人將為您保留時段。</p>
+            <button onclick="goToLine()" class="w-full bg-[#06C755] text-white py-4 rounded-full font-bold shadow-lg flex items-center justify-center gap-2 text-lg">
+                私訊 LINE 確認預約
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const LINE_ID = "@314jacpw";
+        const START_HOUR = 10;
+        const END_HOUR = 18;
+        const BUFFER = 30;
+
+        const SERVICES = [
+            { cat: '臉部管理', items: [
+                { name: '毛孔深呼吸淨化管理', dur: 60, price: 890 },
+                { name: '撥筋V臉緊緻管理', dur: 60, price: 1190 },
+                { name: '深層淨化調理課程', dur: 90, price: 1290 },
+                { name: '杏仁酸煥膚管理', dur: 90, price: 1390 },
+                { name: '藍銅胜肽修護補水', dur: 90, price: 1490 },
+                { name: '水飛梭深層潔膚', dur: 90, price: 1590 },
+                { name: 'MTS水光保濕管理', dur: 90, price: 1690 }
+            ]},
+            { cat: '身體療程', items: [
+                { name: '頭肩頸釋壓放鬆', dur: 30, price: 800 },
+                { name: '背部三焦舒壓', dur: 60, price: 1300 },
+                { name: '全身經絡循環SPA', dur: 90, price: 1950 },
+                { name: '足部深層釋放', dur: 50, price: 1790 }
+            ]},
+            { cat: '採耳方案', items: [
+                { name: 'A. 小資採耳', dur: 30, price: 750 },
+                { name: 'B. 舒壓採耳', dur: 45, price: 900 },
+                { name: 'C. 薰香採耳', dur: 60, price: 1100 },
+                { name: 'D. 舒眠採耳', dur: 90, price: 1400 }
+            ]}
+        ];
+
+        // 模擬已約滿時段 (測試用)
+        const BOOKED_DATA = { "2024-05-20": ["14:00", "14:30"] };
+
+        let state = { step: 1, service: null, date: '', time: '', name: '', phone: '' };
+
+        function init() {
+            const list = document.getElementById('service-list');
+            SERVICES.forEach(cat => {
+                let html = `<div><h3 class="text-xs font-bold text-stone-400 mb-3 tracking-widest border-l-2 border-primary pl-2">${cat.cat}</h3><div class="space-y-3">`;
+                cat.items.forEach(item => {
+                    html += `<button onclick="selectService('${item.name}', ${item.dur}, ${item.price})" class="w-full bg-white p-4 rounded-xl shadow-sm border border-transparent hover:border-primary text-left flex justify-between items-center group transition-all">
+                        <div><div class="font-medium group-hover:text-[#B4975A]">${item.name}</div><div class="text-[10px] text-stone-400 mt-1">${item.dur} min · $${item.price}</div></div>
+                        <span class="text-stone-300">→</span></button>`;
+                });
+                html += `</div></div>`;
+                list.innerHTML += html;
+            });
+            document.getElementById('date-input').min = new Date().toISOString().split('T')[0];
+        }
+
+        function selectService(name, dur, price) {
+            state.service = { name, dur, price };
+            changeStep(2);
+        }
+
+        function changeStep(step) {
+            state.step = step;
+            document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`step-${step}`).classList.remove('hidden');
+            
+            // 更新進度條
+            document.querySelectorAll('.step-node').forEach((node, idx) => {
+                const circle = node.querySelector('div');
+                if (idx + 1 < step) {
+                    circle.innerHTML = '✓';
+                    circle.className = 'w-8 h-8 rounded-full flex items-center justify-center text-sm mb-1 bg-primary text-white';
+                } else if (idx + 1 === step) {
+                    circle.innerHTML = idx + 1;
+                    circle.className = 'w-8 h-8 rounded-full flex items-center justify-center text-sm mb-1 bg-primary text-white';
+                } else {
+                    circle.innerHTML = idx + 1;
+                    circle.className = 'w-8 h-8 rounded-full flex items-center justify-center text-sm mb-1 bg-stone-200 text-stone-500';
+                }
+            });
+
+            if (step === 3) {
+                document.getElementById('summary-service').innerText = state.service.name;
+                document.getElementById('summary-datetime').innerText = `${state.date} ${state.time}`;
+            }
+        }
+
+        document.getElementById('date-input').addEventListener('change', (e) => {
+            state.date = e.target.value;
+            renderTimeSlots();
+            document.getElementById('time-container').classList.remove('hidden');
+        });
+
+        function renderTimeSlots() {
+            const container = document.getElementById('time-slots');
+            container.innerHTML = '';
+            let current = new Date();
+            current.setHours(START_HOUR, 0, 0, 0);
+            const end = new Date();
+            end.setHours(END_HOUR, 0, 0, 0);
+
+            while (current < end) {
+                const t = current.toTimeString().substring(0, 5);
+                const isBooked = BOOKED_DATA[state.date]?.includes(t);
+                const btn = document.createElement('button');
+                btn.className = isBooked 
+                    ? "py-3 rounded-lg text-xs bg-stone-50 text-stone-300 cursor-not-allowed line-through" 
+                    : "py-3 rounded-lg text-xs bg-white border border-stone-200 hover:border-primary";
+                btn.innerText = t;
+                if (!isBooked) {
+                    btn.onclick = () => {
+                        state.time = t;
+                        document.querySelectorAll('#time-slots button').forEach(b => b.classList.remove('bg-primary', 'text-white'));
+                        btn.classList.add('bg-primary', 'text-white');
+                        document.getElementById('duration-info').classList.remove('hidden');
+                        document.getElementById('duration-text').innerText = `${state.service.dur}min 服務 + ${BUFFER}min 清消`;
+                        document.getElementById('next-to-step3').classList.remove('hidden');
+                    };
+                }
+                container.appendChild(btn);
+                current.setMinutes(current.getMinutes() + 30);
+            }
+        }
+
+        function confirmBooking() {
+            state.name = document.getElementById('user-name').value;
+            state.phone = document.getElementById('user-phone').value;
+            if (!state.name || !state.phone) return alert('請填寫完整姓名與電話');
+            changeStep(4);
+        }
+
+        function goToLine() {
+            const msg = `您好，我想預約：\n項目：${state.service.name}\n時間：${state.date} ${state.time}\n姓名：${state.name}\n電話：${state.phone}`;
+            window.location.href = `https://line.me/R/oaMessage/${LINE_ID}/?${encodeURIComponent(msg)}`;
+        }
+
+        init();
+    </script>
+</body>
+</html>
