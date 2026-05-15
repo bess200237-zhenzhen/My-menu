@@ -3,240 +3,432 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>清輕妍美學 SPA | 線上預約</title>
+    <title>清輕妍美學 SPA | AI 智能預約系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #FDF8F3; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #FDF8F3; -webkit-tap-highlight-color: transparent; }
         .font-serif { font-family: 'Noto Serif TC', serif; }
         .primary-color { color: #B4975A; }
         .bg-primary { background-color: #B4975A; }
         .border-primary { border-color: #B4975A; }
+        .booked-slot { background-color: #f3f4f6; color: #d1d5db; text-decoration: line-through; cursor: not-allowed; border: none !important; }
+        .ai-glow { box-shadow: 0 0 15px rgba(180, 151, 90, 0.3); border: 1px solid rgba(180, 151, 90, 0.5); }
+        @keyframes pulse-gold { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+        .loading-dots span { animation: pulse-gold 1s infinite; }
     </style>
 </head>
-<body class="text-stone-800 pb-10">
+<body class="text-stone-800 pb-20">
 
-    <!-- Header -->
     <header class="bg-white border-b border-stone-200 py-6 px-4 text-center sticky top-0 z-50 shadow-sm">
         <h1 class="text-2xl font-serif tracking-widest primary-color">清輕妍美學 SPA</h1>
-        <p class="text-[10px] text-stone-400 mt-1 uppercase tracking-[0.2em]">Relax · Renew · Rejuvenate</p>
+        <p class="text-[10px] text-stone-400 mt-1 uppercase tracking-[0.2em]">專業臉部管理 · 身體舒壓 · 採耳</p>
     </header>
 
+    <div id="loading-overlay" class="fixed inset-0 bg-white z-[100] flex items-center justify-center">
+        <div class="text-center">
+            <div class="inline-block w-8 h-8 border-4 border-[#B4975A] border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-xs text-stone-400 mt-4 tracking-widest">系統載入中...</p>
+        </div>
+    </div>
+
     <div id="app" class="max-w-md mx-auto mt-6 px-4">
-        <!-- 步驟指示器 -->
+        <!-- 進度條 -->
         <div class="flex justify-between mb-8 px-2" id="progress-bar">
-            <div class="flex flex-col items-center flex-1 step-node" data-step="1">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm mb-1 bg-primary text-white">1</div>
-                <span class="text-[10px] text-stone-400">選項目</span>
+            <div class="flex flex-col items-center flex-1" id="p-1">
+                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs mb-1 bg-primary text-white">1</div>
+                <span class="text-[10px] text-stone-400">項目</span>
             </div>
-            <div class="flex flex-col items-center flex-1 step-node" data-step="2">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm mb-1 bg-stone-200 text-stone-500">2</div>
-                <span class="text-[10px] text-stone-400">挑時間</span>
+            <div class="flex flex-col items-center flex-1" id="p-2">
+                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs mb-1 bg-stone-200 text-stone-500">2</div>
+                <span class="text-[10px] text-stone-400">時間</span>
             </div>
-            <div class="flex flex-col items-center flex-1 step-node" data-step="3">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm mb-1 bg-stone-200 text-stone-500">3</div>
-                <span class="text-[10px] text-stone-400">留資料</span>
+            <div class="flex flex-col items-center flex-1" id="p-3">
+                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs mb-1 bg-stone-200 text-stone-500">3</div>
+                <span class="text-[10px] text-stone-400">確認</span>
             </div>
         </div>
 
-        <!-- 步驟 1: 服務項目 -->
+        <!-- 步驟 1: 選服務 -->
         <div id="step-1" class="step-content">
-            <h2 class="text-lg font-medium mb-4 flex items-center gap-2">
-                <span class="primary-color">✦</span> 選擇服務項目
-            </h2>
-            <div id="service-list" class="space-y-6">
-                <!-- 由 JavaScript 注入內容 -->
+            <!-- AI 諮詢入口 -->
+            <div class="bg-white p-5 rounded-2xl mb-6 ai-glow border-t-4 border-t-[#B4975A] relative overflow-hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">✨</span>
+                        <h3 class="font-bold text-sm primary-color tracking-tight">AI 智能美療分析師</h3>
+                    </div>
+                    <button onclick="playAIVoice('您好，我是您的AI美療顧問。請告訴我您的膚況或想改善的問題，我將為您推薦最適合的SPA療程。')" class="text-xs text-[#B4975A] flex items-center gap-1 hover:opacity-70">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/></svg> 聽導覽
+                    </button>
+                </div>
+                <p class="text-[11px] text-stone-500 mb-4 leading-relaxed">我們結合了最新 AI 技術，為您量身打造專屬療程建議。</p>
+                <div class="flex gap-2">
+                    <input type="text" id="ai-input" placeholder="例如：換季皮膚脫皮、工作壓力大想徹底放鬆..." class="flex-1 text-xs p-3 bg-stone-50 rounded-xl outline-none border border-stone-100 focus:border-primary transition-all">
+                    <button onclick="askAI()" id="ai-btn" class="bg-primary text-white px-5 py-2 rounded-xl text-xs font-medium active:scale-95 transition-transform shadow-md">✨ 諮詢</button>
+                </div>
+                <div id="ai-response-box" class="mt-4 hidden animate-in fade-in slide-in-from-top-2">
+                    <div id="ai-response" class="text-xs text-stone-600 leading-relaxed bg-stone-50/50 p-4 rounded-xl border border-dashed border-[#B4975A]/30"></div>
+                    <button id="ai-voice-btn" class="mt-2 text-[10px] primary-color font-medium hidden">🔊 播放建議音訊</button>
+                </div>
             </div>
+
+            <h2 class="text-lg font-medium mb-4 flex items-center gap-2">選擇服務項目</h2>
+            <div id="service-list" class="space-y-6"></div>
         </div>
 
-        <!-- 步驟 2: 日期與時間 -->
+        <!-- 步驟 2: 選日期時間 -->
         <div id="step-2" class="step-content hidden">
-            <button onclick="changeStep(1)" class="text-xs text-stone-400 mb-4 hover:text-[#B4975A]">← 返回重新選擇項目</button>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 mb-6">
-                <h2 class="text-lg font-medium mb-4">選擇預約日期</h2>
-                <input type="date" id="date-input" class="w-full p-3 border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#B4975A]" min="">
+            <button onclick="goToStep(1)" class="text-xs text-stone-400 mb-4 hover:text-[#B4975A]">← 返回重新選項目</button>
+            <div class="bg-white p-6 rounded-2xl shadow-sm mb-4">
+                <label class="block text-sm font-medium mb-3">預預約日期</label>
+                <input type="date" id="date-picker" class="w-full p-4 bg-stone-50 rounded-xl outline-none focus:ring-1 focus:ring-primary border-none">
             </div>
-            <div id="time-container" class="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 hidden">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-medium">選擇時段</h2>
-                    <span class="text-[10px] text-stone-400">含 30min 清消緩衝</span>
+            <div id="time-area" class="bg-white p-6 rounded-2xl shadow-sm hidden">
+                <h2 class="text-sm font-medium mb-4">預約時段 (含30分清消)</h2>
+                <div id="time-grid" class="grid grid-cols-3 gap-2"></div>
+                <div id="selected-info" class="mt-6 p-4 bg-[#FDF8F3] rounded-xl border border-primary/20 hidden">
+                    <div class="text-[10px] text-stone-400">您選擇的時間</div>
+                    <div class="text-sm font-bold primary-color" id="display-time"></div>
                 </div>
-                <div id="time-slots" class="grid grid-cols-3 gap-2">
-                    <!-- 由 JavaScript 注入時段 -->
-                </div>
-                <div id="duration-info" class="mt-6 p-3 bg-[#FDF8F3] rounded-lg border border-[#B4975A]/20 hidden">
-                    <div class="text-[10px] text-stone-500">預計安排</div>
-                    <div class="text-xs font-medium" id="duration-text"></div>
-                </div>
-            </div>
-            <div class="fixed bottom-6 left-0 right-0 px-4 max-w-md mx-auto hidden" id="next-to-step3">
-                <button onclick="changeStep(3)" class="w-full bg-primary text-white py-4 rounded-full font-medium shadow-lg">下一步：填寫聯絡資料</button>
+                <button onclick="goToStep(3)" id="btn-to-3" class="w-full bg-primary text-white py-4 rounded-xl font-medium mt-6 hidden shadow-lg">確認時間，填寫資料</button>
             </div>
         </div>
 
-        <!-- 步驟 3: 聯絡資料 -->
+        <!-- 步驟 3: 填資料 -->
         <div id="step-3" class="step-content hidden">
-            <button onclick="changeStep(2)" class="text-xs text-stone-400 mb-4 hover:text-[#B4975A]">← 返回調整時間</button>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-100">
+            <button onclick="goToStep(2)" class="text-xs text-stone-400 mb-4">← 返回修改時間</button>
+            <div class="bg-white p-6 rounded-2xl shadow-sm">
                 <h2 class="text-lg font-medium mb-6">確認預約資訊</h2>
-                <div class="space-y-3 mb-8 text-sm">
-                    <div class="flex justify-between border-b border-stone-50 pb-2">
-                        <span class="text-stone-400">預約項目</span>
-                        <span class="font-medium" id="summary-service"></span>
+                
+                <!-- AI 術前溫馨提醒 -->
+                <div id="ai-tips-container" class="mb-6 p-5 bg-gradient-to-br from-stone-50 to-white rounded-2xl border border-stone-100 hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs">✨</span>
+                            <h4 class="text-[10px] font-bold text-stone-400 uppercase tracking-widest">AI 術前小叮嚀</h4>
+                        </div>
+                        <button id="play-tips-voice" class="text-[10px] primary-color opacity-60 hover:opacity-100">🔊 朗讀提醒</button>
                     </div>
-                    <div class="flex justify-between border-b border-stone-50 pb-2">
-                        <span class="text-stone-400">日期時間</span>
-                        <span class="font-medium primary-color" id="summary-datetime"></span>
-                    </div>
+                    <div id="ai-tips-content" class="text-[13px] text-stone-600 leading-relaxed italic"></div>
+                </div>
+
+                <div class="bg-stone-50 p-4 rounded-xl mb-6 space-y-2 text-sm">
+                    <div class="flex justify-between"><span class="text-stone-400">項目</span><span id="sum-name"></span></div>
+                    <div class="flex justify-between"><span class="text-stone-400">時間</span><span id="sum-time" class="primary-color font-bold"></span></div>
                 </div>
                 <div class="space-y-4">
-                    <input type="text" id="user-name" placeholder="顧客姓名" class="w-full p-4 bg-stone-50 rounded-xl border border-transparent focus:bg-white focus:border-primary outline-none">
-                    <input type="tel" id="user-phone" placeholder="聯絡電話" class="w-full p-4 bg-stone-50 rounded-xl border border-transparent focus:bg-white focus:border-primary outline-none">
+                    <input type="text" id="cust-name" placeholder="顧客姓名" class="w-full p-4 bg-stone-50 rounded-xl outline-none focus:bg-white focus:ring-1 focus:ring-primary border-none text-sm">
+                    <input type="tel" id="cust-phone" placeholder="聯絡電話" class="w-full p-4 bg-stone-50 rounded-xl outline-none focus:bg-white focus:ring-1 focus:ring-primary border-none text-sm">
                 </div>
-                <button onclick="confirmBooking()" class="w-full bg-primary text-white py-4 rounded-xl font-medium shadow-md mt-8">立即送出預約</button>
-                <p class="text-[10px] text-center text-stone-400 mt-4 italic">點擊後將連動至 LINE 進行最後確認</p>
+                <button onclick="submitBooking()" id="submit-btn" class="w-full bg-primary text-white py-4 rounded-xl font-medium mt-8 shadow-md">立即送出預約</button>
             </div>
         </div>
 
         <!-- 步驟 4: 完成 -->
         <div id="step-4" class="step-content hidden text-center py-10">
-            <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">✓</div>
-            <h2 class="text-xl font-bold mb-2">預約資料已準備就緒！</h2>
-            <p class="text-stone-500 text-sm mb-10 px-6">請點擊下方按鈕傳送訊息至我們的官方 LINE，專人將為您保留時段。</p>
-            <button onclick="goToLine()" class="w-full bg-[#06C755] text-white py-4 rounded-full font-bold shadow-lg flex items-center justify-center gap-2 text-lg">
+            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl animate-bounce">✓</div>
+            <h2 class="text-xl font-bold mb-2">預約資料已送出！</h2>
+            <p id="ai-success-msg" class="text-stone-500 text-sm mb-10 px-6"></p>
+            <button onclick="openLine()" class="w-full bg-[#06C755] text-white py-4 rounded-full font-bold flex items-center justify-center gap-2 text-lg shadow-lg active:scale-95 transition-transform">
                 私訊 LINE 確認預約
             </button>
         </div>
     </div>
 
     <script>
+        // --- 設定 ---
+        const apiKey = ""; 
         const LINE_ID = "@314jacpw";
-        const START_HOUR = 10;
-        const END_HOUR = 18;
-        const BUFFER = 30;
-
+        const START_H = 10, END_H = 18;
         const SERVICES = [
             { cat: '臉部管理', items: [
-                { name: '毛孔深呼吸淨化管理', dur: 60, price: 890 },
-                { name: '撥筋V臉緊緻管理', dur: 60, price: 1190 },
-                { name: '深層淨化調理課程', dur: 90, price: 1290 },
-                { name: '杏仁酸煥膚管理', dur: 90, price: 1390 },
-                { name: '藍銅胜肽修護補水', dur: 90, price: 1490 },
-                { name: '水飛梭深層潔膚', dur: 90, price: 1590 },
-                { name: 'MTS水光保濕管理', dur: 90, price: 1690 }
+                { name: '毛孔深呼吸淨化管理', dur: 60, price: 890, desc: '適合油性、有黑頭粉刺困擾者，深層潔淨毛孔。' },
+                { name: '撥筋V臉緊緻管理', dur: 60, price: 1190, desc: '適合臉部浮腫、想提升輪廓線條者，疏通經絡。' },
+                { name: '深層淨化調理課程', dur: 90, price: 1290, desc: '全方位調理粉刺、暗沉問題。' },
+                { name: '杏仁酸煥膚管理', dur: 90, price: 1390, desc: '適合膚色不均、粗糙者，溫和代謝角質。' },
+                { name: '藍銅胜肽修護補水', dur: 90, price: 1490, desc: '敏弱肌的首選，高效保濕與鎮定。' },
+                { name: '水飛梭深層潔膚', dur: 90, price: 1590, desc: '利用渦輪水流深層清潔並導入精華。' },
+                { name: 'MTS水光保濕管理', dur: 90, price: 1690, desc: '打造極致保濕水光感肌膚。' }
             ]},
             { cat: '身體療程', items: [
-                { name: '頭肩頸釋壓放鬆', dur: 30, price: 800 },
-                { name: '背部三焦舒壓', dur: 60, price: 1300 },
-                { name: '全身經絡循環SPA', dur: 90, price: 1950 },
-                { name: '足部深層釋放', dur: 50, price: 1790 }
+                { name: '頭肩頸釋壓放鬆', dur: 30, price: 800, desc: '適合久坐辦公室、肩頸僵硬者。' },
+                { name: '背部三焦舒壓', dur: 60, price: 1300, desc: '釋放深層壓力，促進背部循環。' },
+                { name: '全身經絡循環SPA', dur: 90, price: 1950, desc: '全方位的身心平衡體驗。' }
             ]},
             { cat: '採耳方案', items: [
-                { name: 'A. 小資採耳', dur: 30, price: 750 },
-                { name: 'B. 舒壓採耳', dur: 45, price: 900 },
-                { name: 'C. 薰香採耳', dur: 60, price: 1100 },
-                { name: 'D. 舒眠採耳', dur: 90, price: 1400 }
+                { name: 'A. 小資採耳', dur: 30, price: 750, desc: '基礎耳道清潔。' },
+                { name: 'B. 舒壓採耳', dur: 45, price: 900, desc: '含耳周按摩，放鬆神經。' },
+                { name: 'C. 薰香採耳', dur: 60, price: 1100, desc: '結合耳燭與薰香，深層療癒。' },
+                { name: 'D. 舒眠採耳', dur: 90, price: 1400, desc: '適合有睡眠困擾、高度壓力者。' }
             ]}
         ];
 
-        // 模擬已約滿時段 (測試用)
-        const BOOKED_DATA = { "2024-05-20": ["14:00", "14:30"] };
+        // --- Firebase 初始化 ---
+        const config = JSON.parse(__firebase_config);
+        firebase.initializeApp(config);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-spa';
 
-        let state = { step: 1, service: null, date: '', time: '', name: '', phone: '' };
+        let state = { step: 1, service: null, date: '', time: '', booked: [] };
 
-        function init() {
+        async function init() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await auth.signInWithCustomToken(__initial_auth_token);
+                } else {
+                    await auth.signInAnonymously();
+                }
+            } catch (e) {}
+
             const list = document.getElementById('service-list');
-            SERVICES.forEach(cat => {
-                let html = `<div><h3 class="text-xs font-bold text-stone-400 mb-3 tracking-widest border-l-2 border-primary pl-2">${cat.cat}</h3><div class="space-y-3">`;
-                cat.items.forEach(item => {
-                    html += `<button onclick="selectService('${item.name}', ${item.dur}, ${item.price})" class="w-full bg-white p-4 rounded-xl shadow-sm border border-transparent hover:border-primary text-left flex justify-between items-center group transition-all">
-                        <div><div class="font-medium group-hover:text-[#B4975A]">${item.name}</div><div class="text-[10px] text-stone-400 mt-1">${item.dur} min · $${item.price}</div></div>
+            SERVICES.forEach(c => {
+                let html = `<div><h3 class="text-xs font-bold text-stone-400 mb-3 pl-2 border-l-2 border-primary tracking-widest">${c.cat}</h3><div class="space-y-3">`;
+                c.items.forEach(i => {
+                    html += `<button onclick="chooseService('${i.name}', ${i.dur})" class="w-full bg-white p-4 rounded-xl shadow-sm text-left flex justify-between items-center hover:ring-1 hover:ring-primary transition-all group">
+                        <div><div class="text-sm font-medium group-hover:primary-color">${i.name}</div><div class="text-[10px] text-stone-400">${i.dur}min · $${i.price}</div></div>
                         <span class="text-stone-300">→</span></button>`;
                 });
-                html += `</div></div>`;
-                list.innerHTML += html;
+                list.innerHTML += html + `</div></div>`;
             });
-            document.getElementById('date-input').min = new Date().toISOString().split('T')[0];
+
+            document.getElementById('date-picker').min = new Date().toISOString().split('T')[0];
+            document.getElementById('loading-overlay').classList.add('hidden');
         }
 
-        function selectService(name, dur, price) {
-            state.service = { name, dur, price };
-            changeStep(2);
-        }
+        // --- Gemini API 整合 (核心) ---
 
-        function changeStep(step) {
-            state.step = step;
-            document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`step-${step}`).classList.remove('hidden');
-            
-            // 更新進度條
-            document.querySelectorAll('.step-node').forEach((node, idx) => {
-                const circle = node.querySelector('div');
-                if (idx + 1 < step) {
-                    circle.innerHTML = '✓';
-                    circle.className = 'w-8 h-8 rounded-full flex items-center justify-center text-sm mb-1 bg-primary text-white';
-                } else if (idx + 1 === step) {
-                    circle.innerHTML = idx + 1;
-                    circle.className = 'w-8 h-8 rounded-full flex items-center justify-center text-sm mb-1 bg-primary text-white';
-                } else {
-                    circle.innerHTML = idx + 1;
-                    circle.className = 'w-8 h-8 rounded-full flex items-center justify-center text-sm mb-1 bg-stone-200 text-stone-500';
+        async function callGemini(payload, model = "gemini-2.5-flash-preview-09-2025") {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            let retries = 5;
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    return await response.json();
+                } catch (e) {
+                    if (i === retries - 1) throw e;
+                    await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000));
                 }
-            });
-
-            if (step === 3) {
-                document.getElementById('summary-service').innerText = state.service.name;
-                document.getElementById('summary-datetime').innerText = `${state.date} ${state.time}`;
             }
         }
 
-        document.getElementById('date-input').addEventListener('change', (e) => {
+        // --- TTS 功能 ---
+        async function playAIVoice(text) {
+            const payload = {
+                contents: [{ parts: [{ text: `請用溫柔、親切且專業的台灣女性美療師口吻說出以下文字：${text}` }] }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } }
+                }
+            };
+            try {
+                const result = await callGemini(payload, "gemini-2.5-flash-preview-tts");
+                const pcmData = result.candidates[0].content.parts[0].inlineData.data;
+                playWavFromPcm(pcmData, 24000); // 假設取樣率為 24k
+            } catch (e) {
+                console.error("TTS Error", e);
+            }
+        }
+
+        function playWavFromPcm(base64Pcm, sampleRate) {
+            const binaryString = window.atob(base64Pcm);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i);
+            
+            const wavHeader = new ArrayBuffer(44);
+            const view = new DataView(wavHeader);
+            const writeString = (offset, string) => { for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i)); };
+            
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + bytes.length, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(36, 'data');
+            view.setUint32(40, bytes.length, true);
+            
+            const blob = new Blob([wavHeader, bytes], { type: 'audio/wav' });
+            const url = URL.createObjectURL(blob);
+            const audio = new Audio(url);
+            audio.play();
+        }
+
+        // --- 業務邏輯 ---
+
+        async function askAI() {
+            const query = document.getElementById('ai-input').value;
+            if (!query) return;
+            
+            const btn = document.getElementById('ai-btn');
+            const box = document.getElementById('ai-response-box');
+            const res = document.getElementById('ai-response');
+            const voiceBtn = document.getElementById('ai-voice-btn');
+
+            btn.disabled = true;
+            btn.innerHTML = "✨ 分析中...";
+            box.classList.remove('hidden');
+            res.innerHTML = '<div class="loading-dots">AI 正在研究您的膚況<span>.</span><span>.</span><span>.</span></div>';
+            voiceBtn.classList.add('hidden');
+
+            const systemPrompt = `你是一位專業的美學諮詢師。請分析客戶的需求，並從課程清單中推薦1-2個課程。
+            清單：${JSON.stringify(SERVICES)}
+            請用溫暖、精簡的語氣回覆，限制在 60 字內。`;
+
+            try {
+                const result = await callGemini({
+                    contents: [{ parts: [{ text: query }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] }
+                });
+                const text = result.candidates[0].content.parts[0].text;
+                res.innerHTML = "✨ " + text;
+                voiceBtn.classList.remove('hidden');
+                voiceBtn.onclick = () => playAIVoice(text);
+            } catch (e) {
+                res.innerHTML = "抱歉，AI 諮詢師目前在連線中，請直接選取喜歡的課程。";
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = "✨ 諮詢";
+            }
+        }
+
+        async function generateAITips() {
+            const container = document.getElementById('ai-tips-container');
+            const content = document.getElementById('ai-tips-content');
+            const playBtn = document.getElementById('play-tips-voice');
+            container.classList.remove('hidden');
+            content.innerHTML = "AI 店長正在準備您的專屬叮嚀...";
+
+            const systemPrompt = "請根據客戶選擇的課程名稱，給予一段溫暖、具體的術前小叮嚀（如：穿著、心情、是否可化妝等），字數約 50 字。";
+            const prompt = `我預約了：${state.service.name}`;
+
+            try {
+                const result = await callGemini({ contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: systemPrompt }] } });
+                const tips = result.candidates[0].content.parts[0].text;
+                content.innerHTML = tips;
+                playBtn.onclick = () => playAIVoice(tips);
+            } catch (e) {
+                content.innerHTML = "溫馨提醒：當天建議穿著舒適衣物，帶著愉快的心情來放鬆吧！";
+            }
+        }
+
+        function chooseService(name, dur) {
+            state.service = { name, dur };
+            goToStep(2);
+        }
+
+        function goToStep(s) {
+            state.step = s;
+            document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`step-${s}`).classList.remove('hidden');
+            
+            for (let i = 1; i <= 3; i++) {
+                const node = document.querySelector(`#p-${i} div`);
+                if (i <= s) node.className = "w-7 h-7 rounded-full flex items-center justify-center text-xs mb-1 bg-primary text-white shadow-md transition-all";
+                else node.className = "w-7 h-7 rounded-full flex items-center justify-center text-xs mb-1 bg-stone-200 text-stone-500";
+            }
+
+            if (s === 3) {
+                document.getElementById('sum-name').innerText = state.service.name;
+                document.getElementById('sum-time').innerText = `${state.date} ${state.time}`;
+                generateAITips();
+            }
+        }
+
+        document.getElementById('date-picker').addEventListener('change', async (e) => {
             state.date = e.target.value;
-            renderTimeSlots();
-            document.getElementById('time-container').classList.remove('hidden');
+            state.time = '';
+            document.getElementById('btn-to-3').classList.add('hidden');
+            document.getElementById('selected-info').classList.add('hidden');
+            
+            const snap = await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('bookings')
+                .where('date', '==', state.date).get();
+            state.booked = snap.docs.map(d => d.data().time);
+            
+            renderTimes();
+            document.getElementById('time-area').classList.remove('hidden');
         });
 
-        function renderTimeSlots() {
-            const container = document.getElementById('time-slots');
-            container.innerHTML = '';
-            let current = new Date();
-            current.setHours(START_HOUR, 0, 0, 0);
-            const end = new Date();
-            end.setHours(END_HOUR, 0, 0, 0);
+        function renderTimes() {
+            const grid = document.getElementById('time-grid');
+            grid.innerHTML = '';
+            let cur = new Date(); cur.setHours(START_H, 0, 0, 0);
+            let end = new Date(); end.setHours(END_H, 0, 0, 0);
 
-            while (current < end) {
-                const t = current.toTimeString().substring(0, 5);
-                const isBooked = BOOKED_DATA[state.date]?.includes(t);
-                const btn = document.createElement('button');
-                btn.className = isBooked 
-                    ? "py-3 rounded-lg text-xs bg-stone-50 text-stone-300 cursor-not-allowed line-through" 
-                    : "py-3 rounded-lg text-xs bg-white border border-stone-200 hover:border-primary";
-                btn.innerText = t;
+            while (cur < end) {
+                const t = cur.toTimeString().substring(0, 5);
+                const isBooked = state.booked.includes(t);
+                const b = document.createElement('button');
+                b.className = isBooked ? "py-3 rounded-xl text-xs booked-slot" : "py-3 rounded-xl text-xs bg-white border border-stone-100 hover:border-primary transition-all";
+                b.innerText = t;
                 if (!isBooked) {
-                    btn.onclick = () => {
+                    b.onclick = () => {
                         state.time = t;
-                        document.querySelectorAll('#time-slots button').forEach(b => b.classList.remove('bg-primary', 'text-white'));
-                        btn.classList.add('bg-primary', 'text-white');
-                        document.getElementById('duration-info').classList.remove('hidden');
-                        document.getElementById('duration-text').innerText = `${state.service.dur}min 服務 + ${BUFFER}min 清消`;
-                        document.getElementById('next-to-step3').classList.remove('hidden');
+                        document.querySelectorAll('#time-grid button').forEach(el => el.classList.remove('bg-primary', 'text-white'));
+                        b.classList.add('bg-primary', 'text-white');
+                        document.getElementById('display-time').innerText = `${state.date} ${t}`;
+                        document.getElementById('selected-info').classList.remove('hidden');
+                        document.getElementById('btn-to-3').classList.remove('hidden');
                     };
                 }
-                container.appendChild(btn);
-                current.setMinutes(current.getMinutes() + 30);
+                grid.appendChild(b);
+                cur.setMinutes(cur.getMinutes() + 30);
             }
         }
 
-        function confirmBooking() {
-            state.name = document.getElementById('user-name').value;
-            state.phone = document.getElementById('user-phone').value;
-            if (!state.name || !state.phone) return alert('請填寫完整姓名與電話');
-            changeStep(4);
+        async function submitBooking() {
+            const name = document.getElementById('cust-name').value;
+            const phone = document.getElementById('cust-phone').value;
+            if (!name || !phone) return alert('請完整填寫姓名與電話');
+
+            const btn = document.getElementById('submit-btn');
+            btn.innerText = "處理中...";
+            btn.disabled = true;
+
+            const bookingId = `${state.date}_${state.time.replace(':', '')}`;
+            const ref = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('bookings').doc(bookingId);
+
+            try {
+                const docSnap = await ref.get();
+                if (docSnap.exists()) {
+                    alert('很抱歉，這個時段剛剛被約走了，請選擇其他時段。');
+                    goToStep(2);
+                    return;
+                }
+                await ref.set({
+                    name, phone, date: state.date, time: state.time, service: state.service.name, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                state.finalMsg = `您好，我想預約清輕妍美學SPA：\n項目：${state.service.name}\n時間：${state.date} ${state.time}\n姓名：${name}\n電話：${phone}`;
+                
+                // 生成成功訊息
+                const msgResult = await callGemini({
+                    contents: [{ parts: [{ text: `客戶預約了${state.service.name}，請寫一段短小精悍（20字內）的恭喜訊息，並提醒他記得私訊 LINE 確認。` }] }]
+                });
+                document.getElementById('ai-success-msg').innerText = msgResult.candidates[0].content.parts[0].text;
+                
+                goToStep(4);
+            } catch (e) {
+                alert('系統錯誤，請稍後再試');
+            }
+            btn.disabled = false;
         }
 
-        function goToLine() {
-            const msg = `您好，我想預約：\n項目：${state.service.name}\n時間：${state.date} ${state.time}\n姓名：${state.name}\n電話：${state.phone}`;
-            window.location.href = `https://line.me/R/oaMessage/${LINE_ID}/?${encodeURIComponent(msg)}`;
+        function openLine() {
+            window.location.href = `https://line.me/R/oaMessage/${LINE_ID}/?${encodeURIComponent(state.finalMsg)}`;
         }
 
         init();
