@@ -275,7 +275,7 @@
     </div>
 
     <div class="form-group">
-        <label>預約時間 (營業時間 10:00 - 18:00) *</label>
+        <label>預約時間 (營業時間 10:00 - 16:00) *</label>
         <div class="time-grid" id="timeGrid">
             </div>
     </div>
@@ -300,7 +300,7 @@
 </div>
 
 <script>
-    // 完整資料庫項目（擷取自您的圖片）
+    // 完整資料庫項目
     const servicesData = {
         facial: [
             { name: "毛孔深呼吸淨化管理", time: 60, price: 890 },
@@ -349,11 +349,13 @@
         }
     };
 
-    // 模擬後台設定「已被預約」的日期與時段
-    // 您未來可以在這裡手動增加已被預約的日期和時間段
+    // ==========================================
+    // 💡 在這裡設定已被預約的日期和時間段！
+    // ==========================================
     const bookedSlots = {
-        "2026-05-20": ["13:00", "13:30", "14:00"],
-        "2026-05-21": ["10:00", "10:30", "16:00"]
+        "2026-05-20": ["10:30", "11:00", "14:00"],
+        "2026-05-21": ["10:00", "15:30", "16:00"],
+        "2026-05-25": ["13:00", "13:30"]
     };
 
     let selectedTime = "";
@@ -383,7 +385,7 @@
             `;
         });
 
-        // 連動渲染加購項目（臉部配臉部加購、身體配身體加購）
+        // 連動渲染加購項目
         const addonContainer = document.getElementById('addonServiceList');
         addonContainer.innerHTML = "";
         let addonType = (cat === 'facial') ? 'face' : 'body';
@@ -422,14 +424,12 @@
         let totalTime = 0;
         let totalPrice = 0;
 
-        // 計算主療程
         const mainRadio = document.querySelector('input[name="mainService"]:checked');
         if (mainRadio) {
             totalTime += parseInt(mainRadio.dataset.time);
             totalPrice += parseInt(mainRadio.dataset.price);
         }
 
-        // 計算加購項目
         const addons = document.querySelectorAll('input[name="addonService"]:checked');
         addons.forEach(chk => {
             totalTime += parseInt(chk.dataset.time);
@@ -451,9 +451,9 @@
         grid.innerHTML = "";
         selectedTime = "";
 
-        // 營業時間 10:00 至 18:00，每30分鐘一個班次
+        // 營業時間調整為 10:00 至 16:00
         const startHour = 10;
-        const endHour = 18;
+        const endHour = 16;
         
         let slots = [];
         for(let h = startHour; h < endHour; h++) {
@@ -478,11 +478,9 @@
     function selectTimeSlot(element, isDisabled) {
         if (isDisabled) return;
         
-        // 取消先前選中的樣式
         const active = document.querySelector('.time-slot.selected');
         if (active) active.classList.remove('selected');
 
-        // 標記當前選中
         element.classList.add('selected');
         selectedTime = element.dataset.time;
     }
@@ -510,7 +508,6 @@
         const totalPrice = document.getElementById('sumPrice').innerText;
         const totalDuration = document.getElementById('sumDuration').innerText;
 
-        // 組裝傳送給您的 Line 訊息格式
         const message = `✨【清輕妍美學 SPA 預約申請】✨\n\n` +
                         `👤 顧客姓名：${name}\n` +
                         `📞 聯絡電話：${phone}\n` +
@@ -521,18 +518,20 @@
                         `💰 預估金額：${totalPrice}\n\n` +
                         `（送出此訊息後，請等待小編核對即完成預約哦！）`;
 
-        // 串接官方 LINE 連結
         const lineId = "@314jacpw"; 
         const encodedMessage = encodeURIComponent(message);
         const lineUrl = `https://line.me/R/oaMessage/${lineId}/?${encodedMessage}`;
 
-        // 跳轉到 LINE
         window.location.href = lineUrl;
     }
 
-    // 網頁加載時預先執行一次渲染
     updateServiceList();
 </script>
 
 </body>
 </html>
+const bookedSlots = {
+    "2026-05-20": ["10:30", "11:00", "14:00"],
+    "2026-05-21": ["10:00", "15:30", "16:00"],
+    "2026-05-25": ["13:00", "13:30"]
+};
