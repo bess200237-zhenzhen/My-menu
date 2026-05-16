@@ -14,9 +14,7 @@
         .font-serif { font-family: 'Noto Serif TC', serif; }
         .primary-color { color: #B4975A; }
         .bg-primary { background-color: #B4975A; }
-        .border-primary { border-color: #B4975A; }
         .booked-slot { background-color: #f3f4f6; color: #d1d5db; text-decoration: line-through; cursor: not-allowed; border: none !important; }
-        .step-transition { transition: all 0.3s ease-in-out; }
     </style>
 </head>
 <body class="text-stone-800 pb-20">
@@ -26,17 +24,17 @@
         <p class="text-[10px] text-stone-400 mt-1 uppercase tracking-[0.2em]">專業臉部管理 · 身體舒壓 · 採耳</p>
     </header>
 
-    <!-- 載入動畫 -->
+    <!-- 載入動畫 (若卡住，10秒後會自動消失) -->
     <div id="loading-overlay" class="fixed inset-0 bg-white z-[100] flex items-center justify-center">
         <div class="text-center">
             <div class="inline-block w-8 h-8 border-4 border-[#B4975A] border-t-transparent rounded-full animate-spin"></div>
             <p class="text-xs text-stone-400 mt-4 tracking-widest">系統載入中...</p>
+            <p class="text-[10px] text-stone-300 mt-2">若長時間未進入請檢查網路連線</p>
         </div>
     </div>
 
     <div id="app" class="max-w-md mx-auto mt-6 px-4">
-        <!-- 進度指示器 -->
-        <div class="flex justify-between mb-8 px-2" id="progress-bar">
+        <div class="flex justify-between mb-8 px-2">
             <div class="flex flex-col items-center flex-1" id="p-1">
                 <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs mb-1 bg-primary text-white shadow-sm">1</div>
                 <span class="text-[10px] text-stone-400">選擇項目</span>
@@ -51,234 +49,134 @@
             </div>
         </div>
 
-        <!-- 步驟 1: 選服務項目 -->
         <div id="step-1" class="step-content">
-            <h2 class="text-lg font-medium mb-4 flex items-center gap-2">選擇服務項目</h2>
-            <div id="service-list" class="space-y-6"></div>
+            <h2 class="text-lg font-medium mb-4">選擇服務項目</h2>
+            <div id="service-list" class="space-y-4"></div>
         </div>
 
-        <!-- 步驟 2: 選日期與時間 -->
         <div id="step-2" class="step-content hidden">
-            <button onclick="goToStep(1)" class="text-xs text-stone-400 mb-4 hover:text-[#B4975A] flex items-center gap-1">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                返回重新選擇項目
-            </button>
+            <button onclick="goToStep(1)" class="text-xs text-stone-400 mb-4 flex items-center gap-1">← 返回選項目</button>
             <div class="bg-white p-6 rounded-2xl shadow-sm mb-4">
                 <label class="block text-sm font-medium mb-3">選擇預約日期</label>
-                <input type="date" id="date-picker" class="w-full p-4 bg-stone-50 rounded-xl outline-none focus:ring-1 focus:ring-primary border-none text-base">
+                <input type="date" id="date-picker" class="w-full p-4 bg-stone-50 rounded-xl border-none">
             </div>
             <div id="time-area" class="bg-white p-6 rounded-2xl shadow-sm hidden">
                 <h2 class="text-sm font-medium mb-4">選擇預約時段</h2>
                 <div id="time-grid" class="grid grid-cols-3 gap-2"></div>
-                
-                <div id="selected-info" class="mt-6 p-4 bg-[#FDF8F3] rounded-xl border border-primary/20 hidden">
-                    <div class="text-[10px] text-stone-400">已選時間</div>
-                    <div class="text-sm font-bold primary-color" id="display-time"></div>
-                </div>
-                
-                <button onclick="goToStep(3)" id="btn-to-3" class="w-full bg-primary text-white py-4 rounded-xl font-medium mt-6 hidden shadow-lg active:scale-[0.98] transition-transform">
-                    下一步：填寫預約資料
-                </button>
+                <button onclick="goToStep(3)" id="btn-to-3" class="w-full bg-primary text-white py-4 rounded-xl font-medium mt-6 hidden">下一步</button>
             </div>
         </div>
 
-        <!-- 步驟 3: 填寫顧客資料 -->
         <div id="step-3" class="step-content hidden">
-            <button onclick="goToStep(2)" class="text-xs text-stone-400 mb-4 flex items-center gap-1">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                返回修改時間
-            </button>
+            <button onclick="goToStep(2)" class="text-xs text-stone-400 mb-4">← 返回修改時間</button>
             <div class="bg-white p-6 rounded-2xl shadow-sm">
-                <h2 class="text-lg font-medium mb-6">確認預約資訊</h2>
-                
-                <div class="bg-stone-50 p-4 rounded-xl mb-6 space-y-3 text-sm border border-stone-100">
-                    <div class="flex justify-between items-center border-b border-stone-200 pb-2">
-                        <span class="text-stone-400">預約項目</span>
-                        <span id="sum-name" class="font-medium text-stone-700"></span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-stone-400">預約時間</span>
-                        <span id="sum-time" class="primary-color font-bold"></span>
-                    </div>
+                <h2 class="text-lg font-medium mb-6">確認資訊</h2>
+                <div class="bg-stone-50 p-4 rounded-xl mb-6 text-sm">
+                    <div id="sum-name" class="font-bold mb-1"></div>
+                    <div id="sum-time" class="primary-color"></div>
                 </div>
-
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-[10px] text-stone-400 mb-1 ml-1">顧客姓名</label>
-                        <input type="text" id="cust-name" placeholder="請輸入姓名" class="w-full p-4 bg-stone-50 rounded-xl outline-none focus:bg-white focus:ring-1 focus:ring-primary border-none text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] text-stone-400 mb-1 ml-1">聯絡電話</label>
-                        <input type="tel" id="cust-phone" placeholder="請輸入電話號碼" class="w-full p-4 bg-stone-50 rounded-xl outline-none focus:bg-white focus:ring-1 focus:ring-primary border-none text-sm">
-                    </div>
-                </div>
-                
-                <button onclick="submitBooking()" id="submit-btn" class="w-full bg-primary text-white py-4 rounded-xl font-medium mt-8 shadow-md active:scale-[0.98] transition-transform">
-                    送出預約並私訊 LINE
-                </button>
-                <p class="text-[10px] text-stone-400 text-center mt-4">送出後將跳轉至 LINE 畫面以確認預約</p>
+                <input type="text" id="cust-name" placeholder="顧客姓名" class="w-full p-4 bg-stone-50 rounded-xl mb-4 text-sm">
+                <input type="tel" id="cust-phone" placeholder="聯絡電話" class="w-full p-4 bg-stone-50 rounded-xl mb-4 text-sm">
+                <button onclick="submitBooking()" id="submit-btn" class="w-full bg-primary text-white py-4 rounded-xl">送出預約</button>
             </div>
         </div>
 
-        <!-- 步驟 4: 完成畫面 -->
         <div id="step-4" class="step-content hidden text-center py-12">
-            <div class="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
-                ✓
-            </div>
-            <h2 class="text-xl font-bold mb-2">預約資料已發送！</h2>
-            <p class="text-stone-500 text-sm mb-10 px-8 leading-relaxed">
-                預約資料已備存，請點擊下方按鈕告知我們，由服務人員為您最終確認。
-            </p>
-            <button onclick="openLine()" class="w-full bg-[#06C755] text-white py-4 rounded-full font-bold flex items-center justify-center gap-2 text-lg shadow-lg active:scale-[0.98] transition-transform">
-                <span>私訊 LINE 完成預約</span>
-            </button>
+            <h2 class="text-xl font-bold mb-6">預約資料已發送！</h2>
+            <button onclick="openLine()" class="w-full bg-[#06C755] text-white py-4 rounded-full font-bold">私訊 LINE 完成預約</button>
         </div>
     </div>
 
     <script>
-        // --- 設定與資料庫初始化 ---
+        // --- 請將您的 Firebase Config 貼在這裡 ---
+        let firebaseConfig;
+        try {
+            firebaseConfig = JSON.parse(__firebase_config);
+        } catch (e) {
+            // 如果在外部環境，請在此處貼上您的 Firebase 物件
+            firebaseConfig = {
+                apiKey: "您的API_KEY",
+                authDomain: "您的DOMAIN",
+                projectId: "您的PROJECT_ID",
+                storageBucket: "您的BUCKET",
+                messagingSenderId: "您的ID",
+                appId: "您的APP_ID"
+            };
+        }
+
         const LINE_ID = "@314jacpw";
-        const START_HOUR = 10, END_HOUR = 19; // 營業時間 10:00 - 19:00
         const SERVICES = [
-            { cat: '臉部管理', items: [
-                { name: '毛孔深呼吸淨化管理', dur: 60, price: 890 },
-                { name: '撥筋V臉緊緻管理', dur: 60, price: 1190 },
-                { name: '深層淨化調理課程', dur: 90, price: 1290 },
-                { name: '杏仁酸煥膚管理', dur: 90, price: 1390 },
-                { name: '藍銅胜肽修護補水', dur: 90, price: 1490 },
-                { name: '水飛梭深層潔膚', dur: 90, price: 1590 },
-                { name: 'MTS水光保濕管理', dur: 90, price: 1690 }
-            ]},
-            { cat: '身體療程', items: [
-                { name: '頭肩頸釋壓放鬆', dur: 30, price: 800 },
-                { name: '背部三焦舒壓', dur: 60, price: 1300 },
-                { name: '全身經絡循環SPA', dur: 90, price: 1950 }
-            ]},
-            { cat: '採耳方案', items: [
-                { name: 'A. 小資採耳', dur: 30, price: 750 },
-                { name: 'B. 舒壓採耳', dur: 45, price: 900 },
-                { name: 'C. 薰香採耳', dur: 60, price: 1100 },
-                { name: 'D. 舒眠採耳', dur: 90, price: 1400 }
-            ]}
+            { cat: '臉部管理', items: [{ name: '毛孔深呼吸淨化管理', dur: 60, price: 890 }, { name: '撥筋V臉緊緻管理', dur: 60, price: 1190 }] },
+            { cat: '身體療程', items: [{ name: '頭肩頸釋壓放鬆', dur: 30, price: 800 }, { name: '背部三焦舒壓', dur: 60, price: 1300 }] },
+            { cat: '採耳方案', items: [{ name: 'A. 小資採耳', dur: 30, price: 750 }, { name: 'B. 舒壓採耳', dur: 45, price: 900 }] }
         ];
 
-        // Firebase 初始化
-        const firebaseConfig = JSON.parse(__firebase_config);
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'spa-booking-system';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'spa-default';
 
         let state = { step: 1, service: null, date: '', time: '', bookedSlots: [] };
 
         async function init() {
-            // 靜默登入
+            // 防卡死機制：10秒後強制關閉讀取畫面
+            setTimeout(() => { document.getElementById('loading-overlay').style.display = 'none'; }, 10000);
+
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await auth.signInWithCustomToken(__initial_auth_token);
                 } else {
                     await auth.signInAnonymously();
                 }
-            } catch (e) { console.error("Auth failed", e); }
+            } catch (e) { console.warn("Firebase Auth Error"); }
 
-            // 渲染服務列表
-            const serviceList = document.getElementById('service-list');
-            SERVICES.forEach(category => {
-                let section = `<div class="mb-6">
-                    <h3 class="text-xs font-bold text-stone-400 mb-3 pl-2 border-l-4 border-primary tracking-widest uppercase">${category.cat}</h3>
-                    <div class="space-y-3">`;
-                
-                category.items.forEach(item => {
-                    section += `
-                    <button onclick="chooseService('${item.name}', ${item.dur}, ${item.price})" class="w-full bg-white p-5 rounded-2xl shadow-sm text-left flex justify-between items-center hover:ring-2 hover:ring-primary/20 transition-all active:scale-[0.98]">
-                        <div>
-                            <div class="text-[15px] font-medium text-stone-700">${item.name}</div>
-                            <div class="text-[11px] text-stone-400 mt-1">${item.dur} 分鐘 · $${item.price}</div>
-                        </div>
-                        <div class="w-8 h-8 rounded-full bg-stone-50 flex items-center justify-center text-stone-300">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                        </div>
-                    </button>`;
+            const list = document.getElementById('service-list');
+            SERVICES.forEach(cat => {
+                let html = `<h3 class="text-xs font-bold text-stone-400 mt-4 border-l-2 border-primary pl-2 uppercase">${cat.cat}</h3>`;
+                cat.items.forEach(i => {
+                    html += `<button onclick="chooseService('${i.name}', ${i.dur})" class="w-full bg-white p-4 rounded-xl shadow-sm text-left flex justify-between mt-2">
+                        <div><div class="text-sm font-medium">${i.name}</div><div class="text-[10px] text-stone-400">${i.dur}min</div></div>
+                        <span class="text-stone-300">→</span></button>`;
                 });
-                serviceList.innerHTML += section + `</div></div>`;
+                list.innerHTML += html;
             });
-
-            // 設定日期選擇器最小值為今天
             document.getElementById('date-picker').min = new Date().toISOString().split('T')[0];
-            
-            // 隱藏載入遮罩
             document.getElementById('loading-overlay').style.display = 'none';
         }
 
-        function chooseService(name, dur, price) {
-            state.service = { name, dur, price };
-            goToStep(2);
-        }
-
+        function chooseService(name, dur) { state.service = { name, dur }; goToStep(2); }
         function goToStep(s) {
             state.step = s;
             document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
             document.getElementById(`step-${s}`).classList.remove('hidden');
-            
-            // 更新進度條
-            for (let i = 1; i <= 3; i++) {
-                const dot = document.querySelector(`#p-${i} div`);
-                if (i <= s) dot.className = "w-7 h-7 rounded-full flex items-center justify-center text-xs mb-1 bg-primary text-white shadow-md";
-                else dot.className = "w-7 h-7 rounded-full flex items-center justify-center text-xs mb-1 bg-stone-200 text-stone-500";
-            }
-
             if (s === 3) {
                 document.getElementById('sum-name').innerText = state.service.name;
                 document.getElementById('sum-time').innerText = `${state.date} ${state.time}`;
             }
-            window.scrollTo(0, 0);
         }
 
-        // 當日期改變時，從 Firebase 讀取已預約時段
         document.getElementById('date-picker').addEventListener('change', async (e) => {
             state.date = e.target.value;
-            if (!state.date) return;
-
-            const timeArea = document.getElementById('time-area');
-            timeArea.classList.add('hidden');
-            
-            try {
-                // 讀取當天所有預約
-                const snap = await db.collection('artifacts').doc(appId)
-                    .collection('public').doc('data').collection('bookings')
-                    .where('date', '==', state.date).get();
-                
-                state.bookedSlots = snap.docs.map(doc => doc.data().time);
-                renderTimeGrid();
-                timeArea.classList.remove('hidden');
-            } catch (err) {
-                console.error("Fetch bookings failed", err);
-                alert("無法讀取時間，請檢查網路連線。");
-            }
+            const snap = await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('bookings').where('date', '==', state.date).get();
+            state.bookedSlots = snap.docs.map(doc => doc.data().time);
+            renderTimes();
+            document.getElementById('time-area').classList.remove('hidden');
         });
 
-        function renderTimeGrid() {
-            const grid = document.getElementById('time-grid');
-            grid.innerHTML = '';
-            
-            for (let h = START_HOUR; h < END_HOUR; h++) {
-                [":00", ":30"].forEach(min => {
-                    const t = h.toString().padStart(2, '0') + min;
+        function renderTimes() {
+            const grid = document.getElementById('time-grid'); grid.innerHTML = '';
+            for (let h = 10; h < 19; h++) {
+                [":00", ":30"].forEach(m => {
+                    const t = h.toString().padStart(2, '0') + m;
                     const isBooked = state.bookedSlots.includes(t);
-                    
                     const btn = document.createElement('button');
                     btn.innerText = t;
-                    btn.className = isBooked 
-                        ? "py-3 rounded-xl text-xs booked-slot" 
-                        : "py-3 rounded-xl text-xs bg-white border border-stone-100 hover:border-primary transition-all active:bg-stone-50";
-                    
+                    btn.className = isBooked ? "py-3 rounded-xl text-xs booked-slot" : "py-3 rounded-xl text-xs bg-white border border-stone-100";
                     if (!isBooked) {
                         btn.onclick = () => {
                             state.time = t;
-                            document.querySelectorAll('#time-grid button').forEach(b => b.classList.remove('bg-primary', 'text-white', 'border-primary'));
+                            document.querySelectorAll('#time-grid button').forEach(b => b.classList.remove('bg-primary', 'text-white'));
                             btn.classList.add('bg-primary', 'text-white');
-                            document.getElementById('display-time').innerText = `${state.date} ${t}`;
-                            document.getElementById('selected-info').classList.remove('hidden');
                             document.getElementById('btn-to-3').classList.remove('hidden');
                         };
                     }
@@ -288,57 +186,16 @@
         }
 
         async function submitBooking() {
-            const name = document.getElementById('cust-name').value.trim();
-            const phone = document.getElementById('cust-phone').value.trim();
-            
-            if (!name || !phone) return alert('請完整填寫顧客姓名與聯絡電話。');
-
-            const submitBtn = document.getElementById('submit-btn');
-            submitBtn.innerText = "處理中...";
-            submitBtn.disabled = true;
-
-            // 建立唯一 ID (日期 + 時間) 以防重複預約
-            const bookingId = `${state.date}_${state.time.replace(':', '')}`;
-            const bookingRef = db.collection('artifacts').doc(appId)
-                .collection('public').doc('data').collection('bookings').doc(bookingId);
-
-            try {
-                // 再次檢查是否已被搶走
-                const doc = await bookingRef.get();
-                if (doc.exists()) {
-                    alert('很抱歉，這個時段剛才已被他人預約，請選擇其他時間。');
-                    submitBtn.innerText = "送出預約";
-                    submitBtn.disabled = false;
-                    goToStep(2);
-                    return;
-                }
-
-                // 儲存資料
-                await bookingRef.set({
-                    name, phone,
-                    date: state.date,
-                    time: state.time,
-                    service: state.service.name,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                // 準備 LINE 訊息
-                state.finalMsg = `您好，我想確認預約：\n\n【服務項目】${state.service.name}\n【預約時間】${state.date} ${state.time}\n【預約人姓名】${name}\n【聯絡電話】${phone}`;
-                
-                goToStep(4);
-            } catch (err) {
-                console.error("Booking error", err);
-                alert("儲存預約失敗，請再試一次。");
-                submitBtn.innerText = "送出預約";
-                submitBtn.disabled = false;
-            }
+            const name = document.getElementById('cust-name').value;
+            const phone = document.getElementById('cust-phone').value;
+            if (!name || !phone) return alert('請填寫完整資訊');
+            const ref = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('bookings').doc(`${state.date}_${state.time.replace(':','')}`);
+            await ref.set({ name, phone, date: state.date, time: state.time, service: state.service.name });
+            state.finalMsg = `預約確認：\n項目：${state.service.name}\n時間：${state.date} ${state.time}\n姓名：${name}`;
+            goToStep(4);
         }
 
-        function openLine() {
-            // 跳轉至 LINE 官方帳號訊息
-            window.location.href = `https://line.me/R/oaMessage/${LINE_ID}/?${encodeURIComponent(state.finalMsg)}`;
-        }
-
+        function openLine() { window.location.href = `https://line.me/R/oaMessage/${LINE_ID}/?${encodeURIComponent(state.finalMsg)}`; }
         init();
     </script>
 </body>
